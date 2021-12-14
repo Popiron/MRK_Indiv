@@ -34,7 +34,7 @@ namespace SimpleCompiler
                 else
                 {
                     Console.WriteLine("Синтаксическое дерево построено");
-                    Console.WriteLine("---------------Psevdo---------------");
+                    Console.WriteLine("---------------Pseudocode---------------");
                     Console.Write(Text);
 
                     Console.WriteLine("\n---------------C#---------------");
@@ -46,7 +46,7 @@ namespace SimpleCompiler
             }
             catch (FileNotFoundException)
             {
-                //Console.WriteLine("Файл {0} не найден", FileName);
+                Console.WriteLine("Файл {0} не найден", FileName);
             }
             catch (Exception e)
             {
