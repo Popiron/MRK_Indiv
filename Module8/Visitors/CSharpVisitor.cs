@@ -10,6 +10,7 @@ namespace SimpleLang.Visitors
     {
         public string Text = "";
         private int Indent = 0;
+        private bool mainBlocIsVisited = false;
 
         private string IndentStr()
         {
@@ -33,18 +34,27 @@ namespace SimpleLang.Visitors
         }
         public override void VisitBinOpNode(BinOpNode binop)
         {
-            Text += "(";
             binop.Left.Visit(this);
-            Text += " " + binop.Op + " ";
+            Text += binop.Op;
             binop.Right.Visit(this);
-            Text += ")";
         }
         public override void VisitAssignNode(AssignNode a)
         {
+            var tText = Text;
             Text += IndentStr();
             a.Id.Visit(this);
-            Text += " := ";
+            Text += "=";
             a.Expr.Visit(this);
+
+            if (Text.Contains($"&{a.Id.Name}"))
+            {
+                var v = Text.Remove(0, tText.Length);
+                Text = tText.Replace($"&{a.Id.Name}", v.Trim());
+            } else
+            {
+                Text += ";";
+            }
+            
         }
         public override void VisitCycleNode(CycleNode c)
         {
@@ -55,7 +65,17 @@ namespace SimpleLang.Visitors
         }
         public override void VisitBlockNode(BlockNode bl)
         {
-            Text += IndentStr() + "using System;" + Environment.NewLine + IndentStr() + "namespace default {" + Environment.NewLine + IndentStr() + "public class MainClass {" + Environment.NewLine + IndentStr() + "public static void main(string[] args) {" + Environment.NewLine;
+            var currentMainBlocIsVisited = mainBlocIsVisited;
+            if (mainBlocIsVisited)
+            {
+                Text += Environment.NewLine + IndentStr() + "{" + Environment.NewLine;
+
+            } else
+            {
+                mainBlocIsVisited = true;
+                Text += IndentStr() + "using System;" + Environment.NewLine + IndentStr() + "namespace default {" + Environment.NewLine + IndentStr() + "public class MainClass {" + Environment.NewLine + IndentStr() + "public static void main(string[] args) {" + Environment.NewLine;
+            }
+
             IndentPlus();
 
             var Count = bl.StList.Count;
@@ -64,43 +84,61 @@ namespace SimpleLang.Visitors
                 bl.StList[0].Visit(this);
             for (var i = 1; i < Count; i++)
             {
-                Text += ';';
-                if (!(bl.StList[i] is EmptyNode))
-                    Text += Environment.NewLine;
+                
+                //if (!(bl.StList[i] is AssignNode || bl.StList[i] is VarDefNode))
+                //    Text += Environment.NewLine;
                 bl.StList[i].Visit(this);
+                //if (!(bl.StList[i] is IfNode))
+                //    Text += ';';
             }
             IndentMinus();
-            Text += Environment.NewLine + IndentStr() + "}" + Environment.NewLine + IndentStr() + "}" + Environment.NewLine + IndentStr() + "}";
+
+            if (currentMainBlocIsVisited)
+            {
+                Text += Environment.NewLine + IndentStr() + "}" + Environment.NewLine;
+            } else
+            {
+                Text += Environment.NewLine + IndentStr() + "}" + Environment.NewLine + IndentStr() + "}" + Environment.NewLine + IndentStr() + "}";
+            }
         }
         public override void VisitWriteNode(WriteNode w)
         {
-            Text += IndentStr() + "write(";
+            Text += IndentStr() + "Console.WriteLine(";
             w.Expr.Visit(this);
-            Text += ")";
+            Text += ");";
         }
         public override void VisitVarDefNode(VarDefNode w)
         {
-            Text += IndentStr() + "var " + w.vars[0].Name;
-            for (int i = 1; i < w.vars.Count; i++)
-                Text += ',' + w.vars[i].Name;
+
+            for (int i = 0; i < w.vars.Count; i++)
+                Text += IndentStr() + "var &" + w.vars[i].Name + ";" + Environment.NewLine;
         }
         public override void VisitIfNode(IfNode cond)
         {
-            Text += IndentStr() + "if ";
+            Text += IndentStr() + "if (";
+            var tempText = Text;
             cond.expr.Visit(this);
-            Text += " then ";
+            var x = Text.Remove(0,tempText.Length);
+            if (x.Length == 1)
+            {
+                Text += " != 0";
+            }
+            Text += ") { ";
             Text += Environment.NewLine;
             IndentPlus();
+            
             cond.ifTrue.Visit(this);
             IndentMinus();
             if (null != cond.ifFalse)
             {
                 Text += Environment.NewLine;
-                Text += IndentStr() + "else ";
+                Text += IndentStr() + "} else {";
                 Text += Environment.NewLine;
                 IndentPlus();
                 cond.ifFalse.Visit(this);
                 IndentMinus();
+                Text += Environment.NewLine;
+                Text += IndentStr() + "}";
             }
         }
     }
