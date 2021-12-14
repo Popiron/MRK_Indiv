@@ -81,7 +81,6 @@
     <Compile Include="ShiftReduceParserCode.cs" />
     <Compile Include="SimpleLex.cs" />
     <Compile Include="SimpleYacc.cs" />
-    <Compile Include="Visitors\СSharpVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="a.txt" />

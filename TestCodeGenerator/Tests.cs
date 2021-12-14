@@ -97,7 +97,7 @@ namespace TestCodeGenerator
     }
 
     [TestFixture]
-    //[Ignore("This test is disabled")]
+    [Ignore("This test is disabled")]
     public class TestCSharpVisitor : TestHelper
     {
         [Test]
